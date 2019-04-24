@@ -3,13 +3,11 @@
  */
 
 #define WIFI_SSID "SSID"
-#define WIFI_PASS "PASS"
-#define TELEGRAM_API_KEY "API_KEY"
-#define CHAT_ID "<<chat_id_number>>"
+#define WIFI_PASS "WiFiPassword"
+#define TELEGRAM_API_KEY "--TG-BOT-API-KEY--"
+#define CHAT_ID "--tg-user-id--"
 #define MESSAGE_TEXT "%2aWater+Water+Water%21%21%21%2a%0d%0aThere+is+water+detected+under+the+stairs%21%21%21" // Using Telegram's Markdown syntax
 #define REPEAT_INTERVAL 600 // seconds  
-
-//#define BLINK 1
 
 #include <Arduino.h>
 
@@ -19,7 +17,6 @@
 #include <ESP8266HTTPClient.h>
 
 #include <WiFiClientSecureBearSSL.h>
-// Fingerprint for demo URL, expires on June 2, 2019, needs to be updated well before this date
 
 ESP8266WiFiMulti WiFiMulti;
 
@@ -29,22 +26,16 @@ ESP8266WiFiMulti WiFiMulti;
 
 void setup() 
 {
-#ifdef BLINK
-  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
-#else 
   Serial.begin(115200);
 
   Serial.println();
   Serial.println();
   Serial.println();
-#endif 
 
   for (uint8_t t = 4; t > 0; t--) 
   {
-#ifndef BLINK
     Serial.printf("[SETUP] WAIT %d...\n", t);
     Serial.flush();
-#endif
     delay(1000);
   }
 
@@ -55,6 +46,49 @@ void setup()
 void loop() 
 {
   // wait for WiFi connection
+
+  switch (WiFiMulti.run())
+  {
+    case WL_IDLE_STATUS:
+      Serial.print("WL_IDLE_STATUS...\n");
+      delay(1000);
+      return;
+      
+    case WL_NO_SSID_AVAIL:
+      Serial.print("WL_NO_SSID_AVAIL...\n");
+      delay(1000);
+      return;
+      
+    case WL_SCAN_COMPLETED:
+      Serial.print("WL_SCAN_COMPLETED...\n");
+      delay(1000);
+      return;
+      
+    case WL_CONNECTED:
+      Serial.print("WL_CONNECTED\n");
+      break;
+      
+    case WL_CONNECT_FAILED:
+      Serial.print("WL_CONNECT_FAILED...\n");
+      delay(1000);
+      return;
+      
+    case WL_CONNECTION_LOST:
+      Serial.print("WL_CONNECTION_LOST...\n");
+      delay(1000);
+      return;
+      
+    case WL_DISCONNECTED:
+      Serial.print("WL_DISCONNECTED...\n");
+      delay(1000);
+      return;
+      
+    default:
+      Serial.print("WiFi: unknown state...\n");
+      delay(1000);
+      return;
+  }
+  
   if ((WiFiMulti.run() == WL_CONNECTED)) 
   {
     std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
@@ -63,15 +97,12 @@ void loop()
 
     HTTPClient https;
 
-#ifndef BLINK
     Serial.print("[HTTPS] begin...\n");
-#endif
+
     if (https.begin(*client, TELEGRAM_WATER_WATER_WATER_MESSAGE_URL)) 
     {
-
-#ifndef BLINK
       Serial.print("[HTTPS] GET...\n");
-#endif
+
       // start connection and send HTTP header
       int httpCode = https.GET();
 
@@ -79,48 +110,35 @@ void loop()
       if (httpCode > 0) 
       {
         // HTTP header has been send and Server response header has been handled
-#ifndef BLINK
         Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-#endif
 
         // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) 
         {
           String payload = https.getString();
-#ifndef BLINK
           Serial.println(payload);
-#endif
         }
       } 
       else 
       {
-#ifndef BLINK
         Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
-#endif
       }
 
       https.end();
     } 
     else 
     {
-#ifndef BLINK
       Serial.printf("[HTTPS] Unable to connect\n");
-#endif
     }
   }
+  else
+  {
+    Serial.print("WiFi is not connected ...\n");
+  }
 
-#ifndef BLINK
-  Serial.println("Wait 10m before next round...");
-  delay(REPEAT_INTERVAL * 1000);
-#else 
   for (int i = 0; i < REPEAT_INTERVAL / 3; ++ i)
   {
-    //digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-    delay(1000);                      // Wait for a second
-    //digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(2000);                      // Wait for two seconds (to demonstrate the active low LED)  
+    delay(3000);
+    Serial.printf("Sleeping... %d\n", i);
   }
-#endif 
 }
