@@ -69,22 +69,22 @@ void loop()
       break;
       
     case WL_CONNECT_FAILED:
-      Serial.print("WL_CONNECT_FAILED...\n");
+      Serial.print("WL_CONNECT_FAILED\n");
       delay(1000);
       return;
       
     case WL_CONNECTION_LOST:
-      Serial.print("WL_CONNECTION_LOST...\n");
+      Serial.print("WL_CONNECTION_LOST\n");
       delay(1000);
       return;
       
     case WL_DISCONNECTED:
-      Serial.print("WL_DISCONNECTED...\n");
+      Serial.print("WL_DISCONNECTED\n");
       delay(1000);
       return;
       
     default:
-      Serial.print("WiFi: unknown state...\n");
+      Serial.print("WiFi: unknown state\n");
       delay(1000);
       return;
   }
